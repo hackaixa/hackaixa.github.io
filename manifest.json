@@ -3,14 +3,13 @@
   "short_name": "TriX",
   "icons": [
     {
-      "src": "img/icon-180x180.png",
-      "sizes": "180x180",
+      "src": "assets/images/icon.png",
+      "sizes": "196x196",
       "type": "image/png"
     }
   ],
-  "start_url": "/index.html?launcher=true",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#3E4EB8",
-  "theme_color": "#2F3BA2"
+  "background_color": "#FFA431",
+  "theme_color": "#FFA431"
 }
