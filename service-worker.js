@@ -1,9 +1,7 @@
 var dataCacheName = 'jedixData-v1';
 var cacheName = 'jedixPWA-final-1';
 var filesToCache = [
-  'index.html',
-  'service-worker.js',
-  'manifest.json'
+  'favicon.ico'
 ];
 
 self.addEventListener('install', function(e) {
