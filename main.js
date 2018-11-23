@@ -307,6 +307,7 @@ var LandingComponent = /** @class */ (function () {
         this.contextos = [];
         this.today = Date.now();
         this.beaconId = this.route.snapshot.paramMap.get("beaconId");
+        this.accessToken = null;
     }
     LandingComponent.prototype.sendMensagem = function (campo) {
         var _this = this;
@@ -316,10 +317,16 @@ var LandingComponent = /** @class */ (function () {
             this.mensagemService.sendMensagem(textoPergunta, this.contextos).subscribe(function (res) {
                 _this.contextos = res.contextos;
                 _this.metadata = res.metadata;
-                if (res.mensagem[0] === 'LOGIN_NECESSARIO') {
+                if (res.mensagem[0] === 'LOGIN_NECESSARIO' && _this.accessToken === null) {
                     _this.addResposta('Para essa solicitação, você será direcionado à tela de login. Aguarde...');
                     _this.showCortina = true;
                     setTimeout(function () { _this.isLogin = true; _this.showCortina = false; }, 2000);
+                }
+                else if (res.mensagem[0] === 'LOGIN_NECESSARIO' && _this.accessToken !== null) {
+                    var cAccess = {
+                        accessToken: _this.accessToken,
+                    };
+                    _this.resposdePergunta(cAccess);
                 }
                 else {
                     res.mensagem.forEach(function (el) {
@@ -339,8 +346,8 @@ var LandingComponent = /** @class */ (function () {
             '0001': 'na Agêncua Planalto',
             '9999': 'no Sindicato dos Bancários',
         };
-        var mensagemDefault = 'Olá eu sou a Trix, a assistente virtual da Caixa. Caso você queira falar sobre o PIS ou benefícios socias é só me falar.';
-        var mensagemPersonalizada = "Ol\u00E1 eu sou a Trix, a assistente virtual da Caixa. Vi que voc\u00EA est\u00E1 " + unidades[this.beaconId] + " e posso te ajudar com alguns servi\u00E7os da Caixa por aqui. Caso voc\u00EA queira falar sobre o PIS ou benef\u00EDcios socias \u00E9 s\u00F3 me falar.";
+        var mensagemDefault = 'Olá eu sou a Trix, a assistente virtual da Caixa. Caso você queira falar sobre o PIS ou benefícios sociais é só me falar.';
+        var mensagemPersonalizada = "Ol\u00E1 eu sou a Trix, a assistente virtual da Caixa. Vi que voc\u00EA est\u00E1 " + unidades[this.beaconId] + " e posso te ajudar com alguns servi\u00E7os da Caixa por aqui. Caso voc\u00EA queira falar sobre o PIS ou benef\u00EDcios sociais \u00E9 s\u00F3 me falar.";
         return (this.beaconId !== null) ? mensagemPersonalizada : mensagemDefault;
     };
     LandingComponent.prototype.addPergunta = function (textoPergunta) {
@@ -393,6 +400,7 @@ var LandingComponent = /** @class */ (function () {
         return -c / 2 * (t * (t - 2) - 1) + b;
     };
     LandingComponent.prototype.closeLogin = function (retornoLogin) {
+        this.accessToken = retornoLogin.accessToken;
         this.isLogin = false;
         if (!retornoLogin.login) {
             this.addResposta('Lamento, mas você não foi autenticado. Posso ajudar em algo mais?');
@@ -403,7 +411,9 @@ var LandingComponent = /** @class */ (function () {
     };
     LandingComponent.prototype.resposdePergunta = function (retornoLogin) {
         var _this = this;
+        this.contextos = [];
         this.mensagemService.buscaApiSocial(retornoLogin).subscribe(function (res) {
+            console.log(res);
             if (_this.metadata.intentName === 'PIS - Consulta Valor') {
                 if (res.dados_consulta_servicos_sociais.dados_pis.beneficios.beneficio[0]) {
                     var valorPis = res.dados_consulta_servicos_sociais.dados_pis.beneficios.beneficio[0];
@@ -460,7 +470,7 @@ var MensagensService = /** @class */ (function () {
         this.url_social = 'https://api.caixa.gov.br:8443/sandbox/servicos-sociais/v1/consulta?NIS=13056725312';
     }
     MensagensService.prototype.sendMensagem = function (mensagem, contextos) {
-        return this.http.post(this.url_sendMensagem, { mensagem: mensagem, contextos: contextos }, { withCredentials: true, });
+        return this.http.post(this.url_sendMensagem, { mensagem: mensagem, contextos: contextos });
     };
     MensagensService.prototype.buscaApiSocial = function (retornoLogin) {
         var accessToken = retornoLogin.accessToken;
@@ -598,7 +608,7 @@ var LoginService = /** @class */ (function () {
     LoginService.prototype.login = function (usuario, senha, metadata) {
         return this.http.post(this.url_login, {
             usuario: usuario, senha: senha, metadata: metadata,
-        }, { withCredentials: true, });
+        });
     };
     LoginService = __decorate([
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Injectable"])({
